@@ -1,48 +1,68 @@
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtCore import Qt, QPoint, QRect
+from PyQt5.QtGui import QPainter, QPixmap
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QRubberBand
-from PyQt5.QtGui import QPixmap, QPainter
-from PyQt5.QtCore import QRect, Qt, QPoint
-from PyQt5.QtGui import QImage
-from PIL import ImageGrab
+import os
+import tempfile
 
-class ScreenCapture(QMainWindow):
+class SelectionWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput)
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setGeometry(0, 0, QApplication.primaryScreen().size().width(), QApplication.primaryScreen().size().height())
-        self.rubber_band = QRubberBand(QRubberBand.Rectangle, self)
-        self.start_point = QPoint()
-
+        self.setWindowTitle('Manual ROI Selection')
+        
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
         self.showFullScreen()
-        self.setMouseTracking(True)
-        self.setWindowOpacity(0.3)
+
+        screen = QApplication.primaryScreen()
+        self.background_pixmap = screen.grabWindow(0)
+        self.setFixedSize(self.background_pixmap.size())
+
+        self.start_point = None
+        self.end_point = None
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.start_point = event.pos()
-            self.rubber_band.setGeometry(QRect(self.start_point, QSize()))
-            self.rubber_band.show()
+            self.update()
 
     def mouseMoveEvent(self, event):
-        if self.rubber_band.isVisible():
-            self.rubber_band.setGeometry(QRect(self.start_point, event.pos()).normalized())
+        if self.start_point:
+            self.end_point = event.pos()
+            self.update()
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.rubber_band.hide()
-            rect = self.rubber_band.geometry()
-            x1, y1, x2, y2 = rect.left(), rect.top(), rect.right(), rect.bottom()
-            self.capture_screen(x1, y1, x2, y2)
+            self.end_point = event.pos()
+            self.save_selection()
             self.close()
 
-    def capture_screen(self, x1, y1, x2, y2):
-        screen = QApplication.primaryScreen()
-        screenshot = screen.grabWindow(0, x1, y1, x2-x1, y2-y1)
-        screenshot.save("screenshot.png", "png")
-        print("Screenshot saved as 'screenshot.png'.")
+    def save_selection(self):
+        if not self.start_point or not self.end_point:
+            return
+
+        rect = QRect(self.start_point, self.end_point).normalized()
+
+        temp_dir = tempfile.mkdtemp()
+        filename = os.path.join(temp_dir, 'ROI.png')
+        selected_pixmap = self.background_pixmap.copy(rect)
+        selected_pixmap.save(filename, 'PNG')
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        painter = QPainter(self)
+        painter.drawPixmap(0, 0, self.background_pixmap)
+
+        if self.start_point and self.end_point:
+            painter.setPen(Qt.red)
+            painter.setBrush(Qt.NoBrush)
+            rect = QRect(self.start_point, self.end_point).normalized()
+            painter.drawRect(rect)
+
+def main():
+    app = QApplication(sys.argv)
+    window = SelectionWindow()
+    window.show()
+    sys.exit(app.exec_())
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = ScreenCapture()
-    sys.exit(app.exec_())
+    main()

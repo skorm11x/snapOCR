@@ -31,6 +31,11 @@ Then you can just use the environment normally afterwords:
 poetry install
 ```
 
+LINUX X11 based DE:
+```
+xhost +local:
+```
+
 Install Tesseract OCR engine:
 https://github.com/tesseract-ocr/tesseract/releases
 
