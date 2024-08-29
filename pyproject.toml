@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "dod-training-helper"
+version = "0.0.1"
+description = "A tool for finishing various dod training faster"
+authors = ["skorm11x <kosik.chris.j@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+pytesseract = "^0.3.13"
+pillow = "^10.4.0"
+pyperclip = "^1.9.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
