@@ -35,9 +35,17 @@ LINUX X11 based DE:
 ```
 xhost +local:
 ```
+Also install/ ensure xclip is on system:
+
+Debian:
+```
+Cannot find '.setClipboardContents' in object /klipper at org.kde.klipper
+```
 
 Install Tesseract OCR engine:
 https://github.com/tesseract-ocr/tesseract/releases
+
+Ensure you are using the latest versions for good results! Don't rely on package manager. I build it from source included on tesseract instructions.
 
 
 # Workflow

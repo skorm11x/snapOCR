@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel
 from PyQt5.QtCore import Qt, QPoint, QRect
 from PyQt5.QtGui import QPainter, QPixmap
 import sys
@@ -14,55 +14,70 @@ class SelectionWindow(QMainWindow):
         self.showFullScreen()
 
         screen = QApplication.primaryScreen()
-        self.background_pixmap = screen.grabWindow(0)
-        self.setFixedSize(self.background_pixmap.size())
+        self._background_pixmap = screen.grabWindow(0)
+        self.setFixedSize(self._background_pixmap.size())
 
-        self.start_point = None
-        self.end_point = None
+        self.overlay = QWidget(self)
+        self.overlay.setGeometry(self.rect())
+        self.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.2);")
+        
+        self.instructions_label = QLabel("Click and drag to select the area.", self.overlay)
+        self.instructions_label.setStyleSheet("color: white; font-size: 20px;")
+        self.instructions_label.adjustSize()
+        self.instructions_label.move(
+            (self.overlay.width() - self.instructions_label.width()) // 2,
+            (self.overlay.height() - self.instructions_label.height()) // 2
+        )
+        self.overlay.show()
+
+        self._start_point = None
+        self._end_point = None
+        self.filename = None
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.start_point = event.pos()
+            self._start_point = event.pos()
             self.update()
 
     def mouseMoveEvent(self, event):
-        if self.start_point:
-            self.end_point = event.pos()
+        if self._start_point:
+            self._end_point = event.pos()
             self.update()
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.end_point = event.pos()
-            self.save_selection()
+            self._end_point = event.pos()
+            self._save_selection()
             self.close()
 
-    def save_selection(self):
-        if not self.start_point or not self.end_point:
+    def _save_selection(self):
+        if not self._start_point or not self._end_point:
             return
 
-        rect = QRect(self.start_point, self.end_point).normalized()
+        rect = QRect(self._start_point, self._end_point).normalized()
 
         temp_dir = tempfile.mkdtemp()
-        filename = os.path.join(temp_dir, 'ROI.png')
-        selected_pixmap = self.background_pixmap.copy(rect)
-        selected_pixmap.save(filename, 'PNG')
+        self.filename = os.path.join(temp_dir, 'ROI.png')
+        selected_pixmap = self._background_pixmap.copy(rect)
+        selected_pixmap.save(self.filename, 'PNG')
 
     def paintEvent(self, event):
         super().paintEvent(event)
         painter = QPainter(self)
-        painter.drawPixmap(0, 0, self.background_pixmap)
+        painter.drawPixmap(0, 0, self._background_pixmap)
 
-        if self.start_point and self.end_point:
+        if self._start_point and self._end_point:
             painter.setPen(Qt.red)
             painter.setBrush(Qt.NoBrush)
-            rect = QRect(self.start_point, self.end_point).normalized()
+            rect = QRect(self._start_point, self._end_point).normalized()
             painter.drawRect(rect)
 
-def main():
+def getManualRoi():
     app = QApplication(sys.argv)
     window = SelectionWindow()
     window.show()
-    sys.exit(app.exec_())
+    app.exec_()
+    return window.filename, app
 
 if __name__ == "__main__":
-    main()
+    getManualRoi()
