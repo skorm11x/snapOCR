@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "dod-training-helper"
+name = "snapOCR"
 version = "0.0.1"
-description = "A tool for finishing various dod training faster"
+description = "A tool for snapping a capture of a region of interest and extracting the text"
 authors = ["skorm11x <kosik.chris.j@gmail.com>"]
 readme = "README.md"
 
@@ -12,6 +12,7 @@ pillow = "^10.4.0"
 pyperclip = "^1.9.0"
 pyqt5 = "^5.15.11"
 pylint = "^3.2.6"
+pyinstaller = "^6.10.0"
 
 
 [build-system]

@@ -4,8 +4,8 @@ import sys
 from PIL import Image
 import pytesseract
 import pyperclip
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
-from roi_extract import manual_extract
+from PyQt5.QtWidgets import QMessageBox
+from roi_extract import getManualRoi
 
 
 def configure_tesseract():
@@ -52,7 +52,7 @@ def show_message_dialog(extracted_text, app):
 
 def main():
     configure_tesseract()
-    image_path, app = manual_extract.getManualRoi()
+    image_path, app = getManualRoi()
     
     extracted_text = extract_text_from_image(image_path)
     show_message_dialog(extracted_text, app)
