@@ -69,8 +69,19 @@ your favorite LLM. Add a short primer to the text that was extracted and added t
 
 For example, for a multiple choice question you might type "help me answer: " then paste what is in your clipboard. 
 
+# Lint
+```
+poetry run pylint --rcfile=.pylintrc snapOCR/
+```
+
+# Build binary
+```
+poetry run pyinstaller main.spec
+```
+
 # Future
-1. Change the QT application flow so "main" is responsible and modules just leverage off it.
+<del>1. Change the QT application flow so "main" is responsible and modules just leverage off it.</del>
+
 2. Bundle tesseract with builds
 3  Add modules for tesseract / OCR magik stuff
 4. Automatic ROI extraction option
