@@ -79,6 +79,37 @@ poetry run pylint --rcfile=.pylintrc snapOCR/
 poetry run pyinstaller main.spec
 ```
 
+## Windows fix
+
+```
+Open the Run dialog:
+
+Press Win + R.
+Open Registry Editor:
+
+Type regedit and hit Enter.
+Navigate to the following path:
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem
+Find or create LongPathsEnabled:
+
+Look for a key named LongPathsEnabled.
+If it exists, double-click it and set its value to 1.
+If it doesn’t exist, right-click in the right pane, select New > DWORD (32-bit) Value, name it LongPathsEnabled, and set the value to 1.
+Reboot your computer:
+
+The changes will take effect after restarting the system.
+
+```
+
+Also,
+
+afterwords run poetry install will result in a failure to install pyqt5.
+Install it manually:
+```
+poetry run pip install PyQt5
+```
+
 # Future
 <del>1. Change the QT application flow so "main" is responsible and modules just leverage off it.</del>
 

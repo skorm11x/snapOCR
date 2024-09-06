@@ -16,6 +16,19 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 from roi_extract import get_manual_roi
 
 
+def get_base_path():
+    """returns different base filepaths depending if ran
+    as executable or a script
+
+    Returns:
+        str: base filepath for application execution
+    """
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable), True
+    else:
+        return os.path.dirname(os.path.abspath(__file__)), False
+
+
 def configure_tesseract():
     """
     Configures the tesseract ocr engine path on host system depending on OS.
@@ -23,30 +36,43 @@ def configure_tesseract():
     Raises:
         OSError: only supports linux, windows, and mac-os
     """
-    base_path = os.path.dirname(os.path.abspath(__file__))
+    base_path, is_binary_exec = get_base_path()
+    parent_path = os.path.dirname(base_path)
 
     system = platform.system()
     if system == "Windows":
         bundled_path = os.path.join(base_path, "bin", "tesseract.exe")
         default_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-        pytesseract.pytesseract.tesseract_cmd = bundled_path if os.path.exists(bundled_path) else default_path
+        pytesseract.pytesseract.tesseract_cmd = (
+            bundled_path if os.path.exists(bundled_path) else default_path
+        )
         if os.path.exists(bundled_path):
-            os.environ["TESSDATA_PREFIX"] = r"C:\Program Files\Tesseract-OCR\tessdata"
+            os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
         else:
-            os.environ["TESSDATA_PREFIX"] = os.path.join(base_path, "tessdata")
+            if is_binary_exec:
+                os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
+            else:
+                os.environ["TESSDATA_PREFIX"] = os.path.join(base_path, "tessdata")
     elif system == "Linux" or system == "Darwin":
         bundled_path = os.path.join(base_path, "bin", "tesseract")
         default_path = "/usr/local/bin/tesseract"
-        pytesseract.pytesseract.tesseract_cmd = bundled_path if os.path.exists(bundled_path) else default_path
+        pytesseract.pytesseract.tesseract_cmd = (
+            bundled_path if os.path.exists(bundled_path) else default_path
+        )
         if os.path.exists(bundled_path):
-            os.environ["TESSDATA_PREFIX"] = os.path.join(base_path, "tessdata")
+            os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
         else:
-            os.environ["TESSDATA_PREFIX"] = "/usr/local/share/tessdata/"
+            if is_binary_exec:
+                os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
+            else:
+                os.environ["TESSDATA_PREFIX"] = os.path.join(base_path, "tessdata")
     else:
         raise OSError("Unsupported operating system")
 
     if not os.path.exists(pytesseract.pytesseract.tesseract_cmd):
-        raise OSError(f"Tesseract executable not found at {pytesseract.pytesseract.tesseract_cmd}")
+        raise OSError(
+            f"Tesseract executable not found at {pytesseract.pytesseract.tesseract_cmd}"
+        )
 
 
 def extract_text_from_image(image_path):
@@ -70,7 +96,7 @@ def extract_text_from_image(image_path):
 
 def show_message_dialog(extracted_text):
     """
-    Shows a dialog box confirming that text has been captured to 
+    Shows a dialog box confirming that text has been captured to
     the clipboard or if no text was found.
     TODO: change QApplication init to belong to main.
     Args:
