@@ -75,6 +75,7 @@ poetry run pylint --rcfile=.pylintrc snapOCR/
 ```
 
 # Build binary
+from within snapOCR folder, 
 ```
 poetry run pyinstaller main.spec
 ```

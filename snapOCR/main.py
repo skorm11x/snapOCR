@@ -1,14 +1,12 @@
-"""
-    Driver code for snapOCR found in main(). 
-    Flow:
-    1. Acquire region of interest
-    2. Process through OCR engine
-    3. Utilize results
+"""Run a background process to wait for keyboard trigger or allow user to invoke via cli
+for single OCR window.
 """
 
 import os
 import platform
 import sys
+from subprocess import Popen
+from pynput import keyboard
 from PIL import Image  # type: ignore
 import pytesseract  # type: ignore
 import pyperclip  # type: ignore
@@ -115,17 +113,41 @@ def show_message_dialog(extracted_text):
     msg.exec_()
 
 
-def main():
+def system_watch():
     """
-    The basic functionality and workflow for snapOCR.
+    Main system_watch process that runs forever. When key press triggers.
     """
+    with keyboard.Listener(on_press=on_press) as listener:
+        listener.join()
+
+
+def on_press(key):
+    """Callback function that detects Print Screen key press and triggers snapOCR."""
+    try:
+        if key == keyboard.Key.print_screen:
+            invoke_snapocr()
+    except AttributeError:
+        pass
+
+
+def invoke_snapocr():
+    """Starts snapOCR as a separate subprocess."""
+    python_executable = sys.executable
+    current_script = os.path.abspath(__file__)
+    Popen([python_executable, current_script, "--snapocr"])
+
+
+def snapocr_main():
+    """The snapOCR process workflow."""
     configure_tesseract()
     app = QApplication(sys.argv)
     image_path = get_manual_roi(app)
-
     extracted_text = extract_text_from_image(image_path)
     show_message_dialog(extracted_text)
 
 
 if __name__ == "__main__":
-    main()
+    if "--snapocr" in sys.argv:
+        snapocr_main()
+    else:
+        system_watch()
