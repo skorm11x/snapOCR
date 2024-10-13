@@ -13,6 +13,7 @@ import pyperclip  # type: ignore
 from PyQt5.QtWidgets import QApplication, QMessageBox
 from roi_extract import get_manual_roi
 
+DEBUG = False
 
 def get_base_path():
     """returns different base filepaths depending if ran
@@ -124,7 +125,12 @@ def system_watch():
 def on_press(key):
     """Callback function that detects Print Screen key press and triggers snapOCR."""
     try:
+        if DEBUG:
+            print(f'key pressed {key}')
+            if key == keyboard.Key.esc:
+                exit(0)
         if key == keyboard.Key.print_screen:
+            print("printscreen pressed")
             invoke_snapocr()
     except AttributeError:
         pass
@@ -147,6 +153,9 @@ def snapocr_main():
 
 
 if __name__ == "__main__":
+    if "--debug" in sys.argv:
+        DEBUG = True
+        print("debug started for snapOCR")
     if "--snapocr" in sys.argv:
         snapocr_main()
     else:

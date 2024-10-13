@@ -111,11 +111,23 @@ Install it manually:
 poetry run pip install PyQt5
 ```
 
+make sure you run the script with the environment python e.gg
+```
+poetry run python main.py
+```
+or within poetry shell
+```
+poetry shell
+python main.py
+```
+
 # Future
 <del>1. Change the QT application flow so "main" is responsible and modules just leverage off it.</del>
 
 2. Bundle tesseract with builds
-3  Add modules for tesseract / OCR magik stuff
-4. Automatic ROI extraction option
-5. Template/ memory for specific functions/ forms that is useful over time (think dod standard forms etc.)
-6. Selenium automation 
+3. linux distribution
+4. add certs to exe generation for windows
+5. Add modules for tesseract / OCR magik stuff
+6. Automatic ROI extraction option
+7. Template/ memory for specific functions/ forms that is useful over time (think dod standard forms etc.)
+9. Selenium automation 
