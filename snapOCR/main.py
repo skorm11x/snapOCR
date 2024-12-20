@@ -15,6 +15,7 @@ from roi_extract import get_manual_roi
 
 DEBUG = False
 
+
 def get_base_path():
     """returns different base filepaths depending if ran
     as executable or a script
@@ -24,8 +25,7 @@ def get_base_path():
     """
     if getattr(sys, "frozen", False):
         return os.path.dirname(sys.executable), True
-    else:
-        return os.path.dirname(os.path.abspath(__file__)), False
+    return os.path.dirname(os.path.abspath(__file__)), False
 
 
 def configure_tesseract():
@@ -37,51 +37,41 @@ def configure_tesseract():
     """
     base_path, is_binary_exec = get_base_path()
     parent_path = os.path.dirname(base_path)
-
     system = platform.system()
-    #TODO: update this to run off deployed app tesseract not system one
-    if system == "Windows":
-        bundled_path = os.path.join(base_path, "bin", "tesseract.exe")
-        default_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-        pytesseract.pytesseract.tesseract_cmd = (
-            bundled_path if os.path.exists(bundled_path) else default_path
-        )
-        if os.path.exists(bundled_path):
-            os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
-        else:
-            if is_binary_exec:
-                os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
-            else:
-                os.environ["TESSDATA_PREFIX"] = os.path.join(base_path, "tessdata")
-    elif system == "Linux":
-        bundled_path = os.path.join(base_path, "bin", "tesseract")
-        default_path = "/usr/local/bin/tesseract"
-        pytesseract.pytesseract.tesseract_cmd = (
-            bundled_path if os.path.exists(bundled_path) else default_path
-        )
-        if os.path.exists(bundled_path):
-            os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
-        else:
-            if is_binary_exec:
-                os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
-            else:
-                os.environ["TESSDATA_PREFIX"] = os.path.join(base_path, "tessdata")
-    elif system == "Darwin":
-        #TODO: Assume brew installation for now, find it otherwise
-        bundled_path = os.path.join(base_path, "bin", "tesseract")
-        default_path = "/opt/homebrew/bin/tesseract"
-        pytesseract.pytesseract.tesseract_cmd = (
-            bundled_path if os.path.exists(bundled_path) else default_path
-        )
-        if os.path.exists(bundled_path):
-            os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
-        else:
-            if is_binary_exec:
-                os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
-            else:
-                os.environ["TESSDATA_PREFIX"] = os.path.join(base_path, "tessdata")
-    else:
+
+    config = {
+        "Windows": {
+            "bundled_path": os.path.join(base_path, "bin", "tesseract.exe"),
+            "default_path": r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+        },
+        "Linux": {
+            "bundled_path": os.path.join(base_path, "bin", "tesseract"),
+            "default_path": "/usr/local/bin/tesseract",
+        },
+        "Darwin": {
+            "bundled_path": os.path.join(base_path, "bin", "tesseract"),
+            "default_path": "/opt/homebrew/bin/tesseract",
+        }
+    }
+
+    if system not in config:
         raise OSError("Unsupported operating system")
+
+    bundled_path = config[system]["bundled_path"]
+    default_path = config[system]["default_path"]
+
+    if os.path.exists(bundled_path):
+        pytesseract.pytesseract.tesseract_cmd = bundled_path
+    else:
+        pytesseract.pytesseract.tesseract_cmd = default_path
+
+    if os.path.exists(bundled_path):
+        os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
+    else:
+        if is_binary_exec:
+            os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path)
+        else:
+            os.environ["TESSDATA_PREFIX"] = os.path.join(base_path, "tessdata")
 
     if not os.path.exists(pytesseract.pytesseract.tesseract_cmd):
         raise OSError(
@@ -143,7 +133,7 @@ def on_press(key):
         if DEBUG:
             print(f'key pressed {key}')
             if key == keyboard.Key.esc:
-                exit(0)
+                sys.exit()
         if key == keyboard.Key.print_screen:
             print("printscreen pressed")
             invoke_snapocr()
@@ -155,7 +145,8 @@ def invoke_snapocr():
     """Starts snapOCR as a separate subprocess."""
     python_executable = sys.executable
     current_script = os.path.abspath(__file__)
-    Popen([python_executable, current_script, "--snapocr"])
+    with Popen([python_executable, current_script, "--snapocr"]):
+        pass
 
 
 def snapocr_main():
