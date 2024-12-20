@@ -40,6 +40,7 @@ def configure_tesseract():
     parent_path = os.path.dirname(base_path)
 
     system = platform.system()
+    #TODO: update this to run off deployed app tesseract not system one
     if system == "Windows":
         bundled_path = os.path.join(base_path, "bin", "tesseract.exe")
         default_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -53,9 +54,23 @@ def configure_tesseract():
                 os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
             else:
                 os.environ["TESSDATA_PREFIX"] = os.path.join(base_path, "tessdata")
-    elif system == "Linux" or system == "Darwin":
+    elif system == "Linux":
         bundled_path = os.path.join(base_path, "bin", "tesseract")
         default_path = "/usr/local/bin/tesseract"
+        pytesseract.pytesseract.tesseract_cmd = (
+            bundled_path if os.path.exists(bundled_path) else default_path
+        )
+        if os.path.exists(bundled_path):
+            os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
+        else:
+            if is_binary_exec:
+                os.environ["TESSDATA_PREFIX"] = os.path.join(parent_path, "tessdata")
+            else:
+                os.environ["TESSDATA_PREFIX"] = os.path.join(base_path, "tessdata")
+    elif system == "Darwin":
+        #TODO: Assume brew installation for now, find it otherwise
+        bundled_path = os.path.join(base_path, "bin", "tesseract")
+        default_path = "/opt/homebrew/bin/tesseract"
         pytesseract.pytesseract.tesseract_cmd = (
             bundled_path if os.path.exists(bundled_path) else default_path
         )

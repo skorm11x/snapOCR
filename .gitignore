@@ -4,3 +4,4 @@
 */bin
 *.zip
 *.exe
+*.DS_Store
