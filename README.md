@@ -113,13 +113,15 @@ poetry run pip install PyQt5
 
 make sure you run the script with the environment python e.gg
 ```
-poetry run python main.py
+poetry run python -m snapOCR.main
 ```
 or within poetry shell
 ```
 poetry shell
-python main.py
+python -m snapOCR.main
 ```
+
+> The app listens for the hotkey `Ctrl + Alt + S` to trigger the ROI selector. If you start it with `--debug`, pressing Escape will exit the watcher.
 
 # Future
 <del>1. Change the QT application flow so "main" is responsible and modules just leverage off it.</del>

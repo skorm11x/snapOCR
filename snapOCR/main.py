@@ -11,7 +11,7 @@ from PIL import Image  # type: ignore
 import pytesseract  # type: ignore
 import pyperclip  # type: ignore
 from PyQt5.QtWidgets import QApplication, QMessageBox
-from roi_extract import get_manual_roi
+from snapOCR.roi_extract import get_manual_roi
 
 DEBUG = False
 
@@ -123,29 +123,60 @@ def system_watch():
     """
     Main system_watch process that runs forever. When key press triggers.
     """
-    with keyboard.Listener(on_press=on_press) as listener:
+    with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
         listener.join()
+
+HOTKEY_MODIFIERS = {
+    keyboard.Key.ctrl,
+    keyboard.Key.ctrl_l,
+    keyboard.Key.ctrl_r,
+    keyboard.Key.alt,
+    keyboard.Key.alt_l,
+    keyboard.Key.alt_r,
+}
+HOTKEY_CHAR = "s"
+pressed_keys = set()
+
+
+def _hotkey_pressed(key):
+    if not isinstance(key, keyboard.KeyCode):
+        return False
+    if not key.char:
+        return False
+
+    ctrl_pressed = any(mod in pressed_keys for mod in (keyboard.Key.ctrl, keyboard.Key.ctrl_l, keyboard.Key.ctrl_r))
+    alt_pressed = any(mod in pressed_keys for mod in (keyboard.Key.alt, keyboard.Key.alt_l, keyboard.Key.alt_r))
+    return ctrl_pressed and alt_pressed and key.char.lower() == HOTKEY_CHAR
 
 
 def on_press(key):
-    """Callback function that detects Print Screen key press and triggers snapOCR."""
+    """Callback function that detects the hotkey combo and triggers snapOCR."""
+    pressed_keys.add(key)
     try:
         if DEBUG:
-            print(f'key pressed {key}')
+            print(f'key pressed: {key} ({type(key)})')
             if key == keyboard.Key.esc:
+                print('Escape pressed, exiting watcher')
                 sys.exit()
-        if key == keyboard.Key.print_screen:
-            print("printscreen pressed")
+        if _hotkey_pressed(key):
+            print(f"hotkey pressed: {key}")
             invoke_snapocr()
+        elif DEBUG:
+            print("hotkey not matched")
     except AttributeError:
+        if DEBUG:
+            print("Received non-standard key event")
         pass
+
+
+def on_release(key):
+    pressed_keys.discard(key)
 
 
 def invoke_snapocr():
     """Starts snapOCR as a separate subprocess."""
     python_executable = sys.executable
-    current_script = os.path.abspath(__file__)
-    with Popen([python_executable, current_script, "--snapocr"]):
+    with Popen([python_executable, "-m", "snapOCR.main", "--snapocr"]):
         pass
 
 
